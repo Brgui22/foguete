@@ -23,6 +23,9 @@
                 <h3>MOEDAS</h3>
                 <p id="total-coins">0</p>
             </div>
+            <div class="panel-section">
+                <button id="open-shop-btn" class="shop-button">LOJA DE UPGRADES</button>
+            </div>
         </aside>
 
         <div class="game-column">
@@ -30,19 +33,33 @@
                 <canvas id="gameCanvas"></canvas>
                 <div id="ui-container">
                     <div id="score">Distância: 0 m</div>
+                    <div id="boost-hud" class="hidden">Boosts: 0</div>
                     <div id="instructions">Segure o clique para lançar!</div>
                 </div>
                 <div id="gameOverScreen" class="hidden">
                     <div class="game-over-box">
                         <h1>Fim de Jogo</h1>
+                        
                         <p class="score-label">Distância Final</p>
                         <p id="finalScore">0 m</p>
+
                         <p id="coins-earned" class="score-label"></p>
+
                         <div class="stats-container">
-                            <div><p class="stats-label">Altura Máxima</p><p id="statsAltitude" class="stats-value">0 m</p></div>
-                            <div><p class="stats-label">Pico de Velocidade</p><p id="statsSpeed" class="stats-value">0</p></div>
-                            <div><p class="stats-label">Tempo de Voo</p><p id="statsTime" class="stats-value">0 s</p></div>
+                            <div>
+                                <p class="stats-label">Altura Máxima</p>
+                                <p id="statsAltitude" class="stats-value">0 m</p>
+                            </div>
+                            <div>
+                                <p class="stats-label">Pico de Velocidade</p>
+                                <p id="statsSpeed" class="stats-value">0</p>
+                            </div>
+                            <div>
+                                <p class="stats-label">Tempo de Voo</p>
+                                <p id="statsTime" class="stats-value">0 s</p>
+                            </div>
                         </div>
+                        
                         <button id="restartButton">Recomeçar</button>
                     </div>
                 </div>
@@ -59,6 +76,7 @@
                 <h3>COMO JOGAR</h3>
                 <p>1. <strong>Segure o clique</strong> do mouse ou o toque na tela para ativar o medidor de força.</p>
                 <p>2. <strong>Solte no momento certo</strong> para lançar. Quanto mais força, mais longe você vai!</p>
+                <p>3. Pressione a tecla <strong>'B'</strong> durante o voo para usar um <strong>Boost Aéreo</strong> (se tiver comprado).</p>
             </div>
             <div class="panel-section">
                 <h3>PONTUAÇÃO</h3>
@@ -67,6 +85,17 @@
         </aside>
 
     </main>
+
+    <div id="shop-modal" class="hidden">
+        <div class="shop-container">
+            <div class="shop-header">
+                <h2>LOJA DE UPGRADES</h2>
+                <button id="close-shop-btn" class="close-button">&times;</button>
+            </div>
+            <div id="shop-items-container" class="shop-items">
+                </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>

@@ -12,34 +12,54 @@ const finalScoreEl = document.getElementById('finalScore');
 const restartButton = document.getElementById('restartButton');
 const scoreEl = document.getElementById('score');
 const instructionsEl = document.getElementById('instructions');
+const boostHudEl = document.getElementById('boost-hud');
 const statsAltitudeEl = document.getElementById('statsAltitude');
 const statsSpeedEl = document.getElementById('statsSpeed');
 const statsTimeEl = document.getElementById('statsTime');
+// LOJA
+const shopModal = document.getElementById('shop-modal');
+const openShopBtn = document.getElementById('open-shop-btn');
+const closeShopBtn = document.getElementById('close-shop-btn');
+const shopItemsContainer = document.getElementById('shop-items-container');
 
-canvas.width = 1200; canvas.height = 700;
 
 // --- VARIÁVEIS DO JOGO ---
 let gameState = 'ready';
 let score = 0;
 let totalCoins = 0;
 let maxAltitude = 0; let maxSpeed = 0; let flightStartTime = 0;
+let boostsRemaining = 0;
 
-// --- CÂMERA E MUNDO ---
-const camera = { x: 0, y: 0 };
-const LERP_FACTOR = 0.08; // Suavidade da câmera (menor = mais suave)
-const ALTITUDE_SPACE_START = 5000; // Altitude em "metros" para o espaço começar
+// --- SISTEMA DE UPGRADES ---
+let upgrades = {
+    engine:      { name: "Potência do Motor", desc: "Aumenta a força máxima do lançamento.", level: 0, maxLevel: 10, baseCost: 50,  costMultiplier: 1.8 },
+    boost:       { name: "Boost Aéreo", desc: "Adiciona cargas de boost para usar durante o voo (tecla B).", level: 0, maxLevel: 5,  baseCost: 300, costMultiplier: 2.5 },
+    aerodynamics:{ name: "Eficiência Aerodinâmica", desc: "Reduz o efeito da gravidade sobre a nave.", level: 0, maxLevel: 8,  baseCost: 150, costMultiplier: 2.2 }
+};
+
+// --- BALANCEAMENTO ---
+const BASE_LAUNCH_FORCE = 30; // Força base com nível 0
+const LAUNCH_FORCE_PER_LEVEL = 2.5; // Ganho de força por nível de motor
+
+const BASE_GRAVITY = 0.2;
+const GRAVITY_REDUCTION_PER_LEVEL = 0.01;
+
+const BOOST_FORCE = 10;
 
 // Constantes e objetos do jogo
-const gravity = 0.2, groundLevel = canvas.height - 100, BOUNCINESS = 0.6, FRICTION = 0.95;
+canvas.width = 1200; canvas.height = 700;
+const groundLevel = canvas.height - 100, BOUNCINESS = 0.6, FRICTION = 0.95;
 const ship = { x: 150, y: groundLevel, width: 60, height: 25, angle: -30, velX: 0, velY: 0 };
 const powerMeter = { value: 0, speed: 2.5, direction: 1 };
+const camera = { x: 0, y: 0 }, LERP_FACTOR = 0.08, ALTITUDE_SPACE_START = 5000;
 let scenery = [], particles = [], windLines = [], clouds = [], stars = [];
 
 
 // --- PERSISTÊNCIA DE DADOS (LocalStorage) ---
 function saveGameData() {
     const data = {
-        totalCoins: totalCoins
+        totalCoins: totalCoins,
+        upgrades: upgrades
     };
     localStorage.setItem('lançamentoSideralData', JSON.stringify(data));
 }
@@ -49,14 +69,18 @@ function loadGameData() {
     if (savedData) {
         const data = JSON.parse(savedData);
         totalCoins = data.totalCoins || 0;
+        if (data.upgrades) {
+            for (const key in upgrades) {
+                if (data.upgrades[key]) {
+                    upgrades[key].level = data.upgrades[key].level;
+                }
+            }
+        }
     }
     updateCoinDisplay();
 }
 
-function updateCoinDisplay() {
-    totalCoinsEl.innerText = totalCoins.toLocaleString();
-}
-
+function updateCoinDisplay() { totalCoinsEl.innerText = totalCoins.toLocaleString(); }
 function formatDistance(meters) {
     if (meters >= 1000) {
         const kilometers = meters / 1000;
@@ -64,46 +88,92 @@ function formatDistance(meters) {
     }
     return `${Math.round(meters)} m`;
 }
-
-// --- DESENHO DO FOGUETE NO HANGAR (PREVIEW) ---
 function drawShipPreview() {
     shipPreviewCtx.clearRect(0, 0, shipPreviewCanvas.width, shipPreviewCanvas.height);
     const previewX = shipPreviewCanvas.width / 2;
     const previewY = shipPreviewCanvas.height / 2;
-    
     shipPreviewCtx.save();
     shipPreviewCtx.translate(previewX, previewY);
     shipPreviewCtx.rotate(-15 * Math.PI / 180);
     shipPreviewCtx.scale(1.5, 1.5);
-
     const w = ship.width * 0.5, h = ship.height * 0.5;
-
     shipPreviewCtx.fillStyle = '#b0c4de';
     shipPreviewCtx.beginPath();
     shipPreviewCtx.moveTo(-w * 0.8, 0); shipPreviewCtx.lineTo(w * 0.5, -h);
     shipPreviewCtx.lineTo(w * 0.8, 0); shipPreviewCtx.lineTo(w * 0.5, h);
     shipPreviewCtx.closePath(); shipPreviewCtx.fill();
     shipPreviewCtx.strokeStyle = '#778899'; shipPreviewCtx.lineWidth = 1; shipPreviewCtx.stroke();
-
     shipPreviewCtx.fillStyle = '#778899';
     shipPreviewCtx.beginPath();
     shipPreviewCtx.moveTo(w * 0.7, -h); shipPreviewCtx.lineTo(w * 1.1, -h * 2);
     shipPreviewCtx.lineTo(w * 0.8, 0); shipPreviewCtx.closePath(); shipPreviewCtx.fill();
     shipPreviewCtx.beginPath();
     shipPreviewCtx.moveTo(w * 0.7, h); shipPreviewCtx.lineTo(w * 1.1, h * 2);
-    shipPreviewCtx.lineTo(w * 0.8, 0); ctx.closePath(); ctx.fill();
-    
+    shipPreviewCtx.lineTo(w * 0.8, 0); shipPreviewCtx.closePath(); shipPreviewCtx.fill();
     shipPreviewCtx.fillStyle = '#dc143c';
     shipPreviewCtx.beginPath();
     shipPreviewCtx.moveTo(w * 0.5, -h); shipPreviewCtx.lineTo(w * 0.8, 0);
     shipPreviewCtx.lineTo(w * 0.5, h); shipPreviewCtx.closePath(); shipPreviewCtx.fill();
-
     shipPreviewCtx.restore();
 }
 
-// --- GERAÇÃO DO MUNDO ---
+// --- LÓGICA DA LOJA ---
+function openShop() { shopModal.classList.remove('hidden'); renderShop(); }
+function closeShop() { shopModal.classList.add('hidden'); }
+
+function calculateCost(upgrade) {
+    return Math.floor(upgrade.baseCost * Math.pow(upgrade.costMultiplier, upgrade.level));
+}
+
+function renderShop() {
+    shopItemsContainer.innerHTML = '';
+    for (const key in upgrades) {
+        const upgrade = upgrades[key];
+        const cost = calculateCost(upgrade);
+        const isMaxLevel = upgrade.level >= upgrade.maxLevel;
+        const canAfford = totalCoins >= cost;
+
+        const itemHTML = `
+            <div class="shop-item">
+                <div class="shop-item-info">
+                    <h4>${upgrade.name}</h4>
+                    <p>${upgrade.desc}</p>
+                    <p><strong>Nível:</strong> ${upgrade.level} / ${upgrade.maxLevel}</p>
+                    <div class="level-bar-container">
+                        <div class="level-bar" style="width: ${ (upgrade.level / upgrade.maxLevel) * 100 }%;"></div>
+                    </div>
+                </div>
+                <div class="shop-item-action">
+                    ${isMaxLevel ? 
+                        `<p class="max-level-text">NÍVEL MÁXIMO</p>` : 
+                        `<button class="upgrade-button" data-upgrade-key="${key}" ${!canAfford ? 'disabled' : ''}>
+                            Melhorar <br> (${cost.toLocaleString()} moedas)
+                        </button>`
+                    }
+                </div>
+            </div>
+        `;
+        shopItemsContainer.innerHTML += itemHTML;
+    }
+    document.querySelectorAll('.upgrade-button').forEach(button => {
+        button.addEventListener('click', () => buyUpgrade(button.dataset.upgradeKey));
+    });
+}
+
+function buyUpgrade(key) {
+    const upgrade = upgrades[key];
+    const cost = calculateCost(upgrade);
+    if (totalCoins >= cost && upgrade.level < upgrade.maxLevel) {
+        totalCoins -= cost;
+        upgrade.level++;
+        saveGameData();
+        updateCoinDisplay();
+        renderShop();
+    }
+}
+
+// --- GERAÇÃO DO MUNDO E PARTÍCULAS ---
 function generateWorld() {
-    // Gera cenário do chão
     scenery = [];
     for (let i = 0; i < 500; i++) {
         const x = i * (Math.random() * 200 + 250);
@@ -114,28 +184,15 @@ function generateWorld() {
             scenery.push({type: 'house', x, y: groundLevel - (Math.random() * 30 + 40), width: 60, height: Math.random() * 30 + 50, color: `hsl(${Math.random() * 60 + 200}, 50%, 60%)`});
         }
     }
-    // Gera nuvens em várias altitudes
     clouds = [];
     for (let i = 0; i < 200; i++) {
-        clouds.push({
-            x: Math.random() * 40000 - 10000,
-            y: groundLevel - (Math.random() * ALTITUDE_SPACE_START * 1.5 + 500),
-            size: Math.random() * 50 + 50
-        });
+        clouds.push({ x: Math.random() * 40000 - 10000, y: groundLevel - (Math.random() * ALTITUDE_SPACE_START * 1.5 + 500), size: Math.random() * 50 + 50 });
     }
-    // Gera estrelas no espaço
     stars = [];
     for (let i = 0; i < 500; i++) {
-        stars.push({
-            x: Math.random() * 50000 - 15000,
-            y: groundLevel - (Math.random() * 20000 + ALTITUDE_SPACE_START),
-            size: Math.random() * 2 + 0.5
-        });
+        stars.push({ x: Math.random() * 50000 - 15000, y: groundLevel - (Math.random() * 20000 + ALTITUDE_SPACE_START), size: Math.random() * 2 + 0.5 });
     }
 }
-
-
-// --- PARTÍCULAS ---
 function createSparks(x, y) {
     const sparkCount = 20;
     for (let i = 0; i < sparkCount; i++) {
@@ -152,7 +209,7 @@ function createWindLines() {
 function updateParticles() {
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
-        p.velY += gravity * 0.5;
+        p.velY += BASE_GRAVITY * 0.5; // CORRIGIDO: Usando BASE_GRAVITY em vez de gravity
         p.x += p.velX; p.y += p.velY; p.life--;
         if (p.life <= 0) { particles.splice(i, 1); }
     }
@@ -167,26 +224,31 @@ function updateParticles() {
 }
 
 
-// --- LÓGICA PRINCIPAL ---
+// --- LÓGICA PRINCIPAL DO JOGO ---
 function resetGame() {
     gameState = 'ready'; score = 0;
     maxAltitude = 0; maxSpeed = 0; flightStartTime = 0;
-    ship.x = 150; ship.y = groundLevel;
+    boostsRemaining = upgrades.boost.level;
+    ship.x = 150; ship.y = groundLevel - ship.height / 2;
     ship.velX = 0; ship.velY = 0;
-    camera.x = 0; camera.y = 0;
+    camera.x = ship.x - canvas.width * 0.4;
+    camera.y = groundLevel - canvas.height;
     powerMeter.value = 0;
     particles = []; windLines = [];
     gameOverScreen.classList.add('hidden');
     instructionsEl.classList.remove('hidden');
+    boostHudEl.classList.add('hidden');
 }
 
 function update() {
+    const effectiveGravity = BASE_GRAVITY - (upgrades.aerodynamics.level * GRAVITY_REDUCTION_PER_LEVEL);
+
     if (gameState === 'charging') {
         powerMeter.value += powerMeter.speed * powerMeter.direction;
         if (powerMeter.value >= 100) { powerMeter.value = 100; powerMeter.direction = -1; }
         if (powerMeter.value <= 0) { powerMeter.value = 0; powerMeter.direction = 1; }
     } else if (gameState === 'inFlight') {
-        ship.velY += gravity;
+        ship.velY += effectiveGravity;
         ship.x += ship.velX; ship.y += ship.velY;
         
         const currentDistance = Math.floor(ship.x - 150);
@@ -197,9 +259,9 @@ function update() {
         const currentSpeed = Math.sqrt(ship.velX**2 + ship.velY**2);
         if (currentSpeed > maxSpeed) { maxSpeed = currentSpeed; }
 
-        if (ship.y >= groundLevel) {
-            ship.y = groundLevel;
-            if (Math.abs(ship.velY) > 2) { createSparks(ship.x, ship.y); }
+        if (ship.y + ship.height / 2 >= groundLevel) {
+            ship.y = groundLevel - ship.height / 2;
+            if (Math.abs(ship.velY) > 2) { createSparks(ship.x, ship.y + ship.height / 2); }
             ship.velY = -ship.velY * BOUNCINESS;
             ship.velX *= FRICTION;
             if (Math.abs(ship.velY) < 1) { ship.velY = 0; }
@@ -222,13 +284,11 @@ function update() {
         }
     }
 
-    // Lógica da Câmera
     const targetX = ship.x - canvas.width * 0.4;
     const targetY = ship.y - canvas.height * 0.6;
     camera.x += (targetX - camera.x) * LERP_FACTOR;
     camera.y += (targetY - camera.y) * LERP_FACTOR;
     
-    // Trava a câmera para não ir abaixo do chão (agora usando groundLevel)
     const minCameraY = groundLevel - canvas.height;
     if (camera.y > minCameraY) {
         camera.y = minCameraY;
@@ -268,7 +328,7 @@ function drawShip() {
     ctx.beginPath();
     ctx.moveTo(ship.width * 0.5, -ship.height / 2); ctx.lineTo(ship.width * 0.8, 0);
     ctx.lineTo(ship.width * 0.5, ship.height / 2); ctx.closePath(); ctx.fill();
-    if (gameState === 'charging' || (gameState === 'inFlight' && ship.y < groundLevel)) {
+    if (gameState === 'charging' || (gameState === 'inFlight' && ship.y + ship.height / 2 < groundLevel)) {
         ctx.fillStyle = 'orange';
         ctx.beginPath();
         ctx.moveTo(-ship.width * 0.8, 0); ctx.lineTo(-ship.width * 1.2, -ship.height / 4);
@@ -332,22 +392,16 @@ function drawPowerMeter() {
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Lógica de cor do céu baseada na altitude da NAVE
-    const shipAltitude = Math.max(0, groundLevel - ship.y); // Altitude real da nave
+    const shipAltitude = Math.max(0, groundLevel - ship.y);
     const altitudeRatio = Math.min(1, shipAltitude / ALTITUDE_SPACE_START);
-
-    // Cores: Céu azul claro -> Espaço escuro
-    const rStart = 135, gStart = 206, bStart = 235; // Light Sky Blue
-    const rEnd = 0, gEnd = 0, bEnd = 16;           // Cor do espaço
-    
+    const rStart = 135, gStart = 206, bStart = 235;
+    const rEnd = 0, gEnd = 0, bEnd = 16;
     const r = rStart + (rEnd - rStart) * altitudeRatio;
     const g = gStart + (gEnd - gStart) * altitudeRatio;
     const b = bStart + (bEnd - bStart) * altitudeRatio;
     ctx.fillStyle = `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Camadas de Parallax
     ctx.save();
     ctx.translate(-camera.x * 0.2, -camera.y * 0.2);
     stars.forEach(star => {
@@ -364,9 +418,16 @@ function draw() {
     });
     ctx.restore();
     
-    // Mundo Principal
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
+
+    ctx.fillStyle = '#27ae60';
+    ctx.fillRect(-100000, groundLevel, 200000, 500);
+
+    ctx.fillStyle = '#555';
+    ctx.fillRect(50, groundLevel, 200, 20);
+    ctx.fillStyle = '#777';
+    ctx.fillRect(40, groundLevel + 20, 220, 10);
 
     scenery.forEach(obj => {
         if (obj.type === 'mountain') {
@@ -380,16 +441,6 @@ function draw() {
         }
     });
 
-    // Plataforma de Lançamento
-    ctx.fillStyle = '#555';
-    ctx.fillRect(50, groundLevel, 200, 20);
-    ctx.fillStyle = '#777';
-    ctx.fillRect(40, groundLevel + 20, 220, 10);
-
-    // CHÃO VERDE: Agora com uma largura bem grande para cobrir todo o horizonte
-    ctx.fillStyle = '#27ae60'; // Verde grama
-    ctx.fillRect(-100000, groundLevel, 200000, 500); // Cobrindo uma vasta área horizontal
-
     particles.forEach(p => {
         ctx.globalAlpha = p.life / 60;
         ctx.fillStyle = p.color;
@@ -400,7 +451,6 @@ function draw() {
     drawShip();
     ctx.restore();
 
-    // UI (Vento e Score)
     windLines.forEach(w => {
         ctx.strokeStyle = `rgba(255, 255, 255, ${w.alpha})`;
         ctx.lineWidth = 2;
@@ -408,6 +458,9 @@ function draw() {
     });
     
     scoreEl.innerText = `Distância: ${formatDistance(score)}`;
+    if (gameState === 'inFlight' && upgrades.boost.level > 0) {
+        boostHudEl.innerText = `Boosts: ${boostsRemaining}`;
+    }
     drawPowerMeter();
 }
 
@@ -417,17 +470,36 @@ function handleEnd(e) {
     if (gameState === 'charging') {
         e.preventDefault(); gameState = 'inFlight';
         flightStartTime = Date.now();
-        const launchForce = (powerMeter.value / 100) * 45; // Aumentei um pouco a força para alcançar o espaço
+        if (upgrades.boost.level > 0) {
+            boostHudEl.classList.remove('hidden');
+        }
+
+        const maxLaunchForce = BASE_LAUNCH_FORCE + (upgrades.engine.level * LAUNCH_FORCE_PER_LEVEL);
+        const launchForce = (powerMeter.value / 100) * maxLaunchForce;
+
         const angleRad = Math.abs(ship.angle * Math.PI / 180);
         ship.velX = Math.cos(angleRad) * launchForce;
         ship.velY = -Math.sin(angleRad) * launchForce;
     }
 }
+function handleBoost(e) {
+    if (gameState === 'inFlight' && boostsRemaining > 0) {
+        if (e.key === 'b' || e.key === 'B') {
+            boostsRemaining--;
+            const angleRad = Math.atan2(ship.velY, ship.velX);
+            ship.velX += BOOST_FORCE * Math.cos(angleRad);
+            ship.velY += BOOST_FORCE * Math.sin(angleRad);
+            createSparks(ship.x, ship.y); 
+        }
+    }
+}
+
 canvas.addEventListener('mousedown', handleStart);
 canvas.addEventListener('mouseup', handleEnd);
 canvas.addEventListener('touchstart', handleStart);
 canvas.addEventListener('touchend', handleEnd);
 restartButton.addEventListener('click', resetGame);
+window.addEventListener('keydown', handleBoost);
 
 // --- INÍCIO DO JOGO ---
 function init() {
@@ -436,5 +508,8 @@ function init() {
     drawShipPreview();
     resetGame();
     update();
+
+    openShopBtn.addEventListener('click', openShop);
+    closeShopBtn.addEventListener('click', closeShop);
 }
 init();

@@ -5,6 +5,9 @@
     --text-primary: #e0e0e0;
     --text-secondary: #a0a0c0;
     --accent-gold: #ffeb3b;
+    --accent-green: #4caf50;
+    --accent-blue: #2196F3;
+    --accent-red: #f44336;
 }
 
 body {
@@ -25,22 +28,22 @@ body {
 .main-wrapper {
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Alinha os painéis no topo */
+    align-items: flex-start;
     gap: 20px;
     width: 100%;
     max-width: 1800px;
 }
 
 .game-column {
-    flex-shrink: 0; /* Impede que a coluna do jogo encolha */
+    flex-shrink: 0;
 }
 
 .game-container {
     position: relative;
     border: 2px solid #fff;
     box-shadow: 0 0 20px #fff;
-    width: 1200px; /* Largura fixa para o canvas */
-    height: 700px; /* Altura fixa para o canvas */
+    width: 1200px;
+    height: 700px;
 }
 
 canvas#gameCanvas {
@@ -109,7 +112,26 @@ canvas#gameCanvas {
     color: var(--accent-gold);
 }
 
-/* HUD do Jogo (Score, etc.) */
+.shop-button {
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(145deg, var(--accent-blue), #1976D2);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    border-bottom: 3px solid #0D47A1;
+}
+
+.shop-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+}
+
+/* HUD do Jogo */
 #ui-container {
     position: absolute;
     top: 10px;
@@ -117,114 +139,185 @@ canvas#gameCanvas {
     right: 10px;
     display: flex;
     justify-content: space-between;
+    align-items: flex-start;
     font-size: 24px;
     pointer-events: none;
-    text-shadow: 1px 1px 3px #000; /* Sombra no texto para melhor leitura */
+    text-shadow: 1px 1px 3px #000;
 }
 
-#gameOverScreen {
-    position: absolute;
+#boost-hud {
+    font-weight: bold;
+    color: var(--accent-gold);
+}
+
+
+/* --- ESTILOS DA LOJA --- */
+#shop-modal {
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.8);
     display: flex;
     justify-content: center;
     align-items: center;
-    text-align: center;
-    z-index: 100;
+    z-index: 200;
+    backdrop-filter: blur(5px);
 }
 
-/* Animação de fade-in e escala */
-@keyframes fadeInScaleUp {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-.game-over-box {
-    width: 400px;
-    background: linear-gradient(145deg, #1e2a78, #3c4a9c); /* Gradiente sutil */
-    padding: 30px;
+.shop-container {
+    width: 800px;
+    max-width: 90%;
+    background: var(--panel-bg);
+    border: 2px solid var(--panel-border);
     border-radius: 20px;
-    border: 1px solid #7986cb;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Sombra mais forte */
-    animation: fadeInScaleUp 0.5s cubic-bezier(0.165, 0.84, 0.44, 1); /* Aplica a animação */
-}
-
-.game-over-box h1 {
-    margin-top: 0;
-    color: #fff;
-}
-
-.score-label {
-    font-size: 16px;
-    color: #c5cae9;
-    margin-bottom: 0;
-}
-
-#finalScore {
-    font-size: 48px;
-    font-weight: bold;
-    color: var(--accent-gold);
-    margin: 0 0 10px 0; /* Reduzida a margem inferior */
-}
-
-/* Novo estilo para moedas ganhas */
-#coins-earned {
-    color: var(--accent-gold);
-    font-size: 20px;
-    font-weight: bold;
-    margin-top: -15px;
-    margin-bottom: 20px;
-}
-
-/* Container para as novas estatísticas */
-.stats-container {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
     display: flex;
-    justify-content: space-around;
-    margin-bottom: 30px;
-    border-top: 1px solid #5c6bc0;
-    border-bottom: 1px solid #5c6bc0;
-    padding: 15px 0;
+    flex-direction: column;
+    animation: fadeInScaleUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
-.stats-label {
-    font-size: 14px;
-    color: #c5cae9;
+.shop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    border-bottom: 2px solid var(--panel-border);
+}
+
+.shop-header h2 {
     margin: 0;
+    font-size: 28px;
 }
 
-.stats-value {
-    font-size: 22px;
+.close-button {
+    font-size: 36px;
     font-weight: bold;
-    color: #fff;
-    margin: 5px 0 0 0;
-}
-
-#restartButton {
-    padding: 15px 30px;
-    font-size: 20px;
-    cursor: pointer;
-    background-color: #4caf50;
-    color: white;
+    background: none;
     border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.close-button:hover {
+    color: white;
+}
+
+.shop-items {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.shop-item {
+    background: #111122;
+    border: 1px solid var(--panel-border);
     border-radius: 10px;
-    transition: all 0.3s;
-    border-bottom: 4px solid #388e3c; /* Efeito 3D */
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
 }
 
-#restartButton:hover {
-    background-color: #66bb6a;
-    transform: translateY(-2px); /* Efeito de levantar */
+.shop-item-info {
+    flex-grow: 1;
 }
 
-.hidden {
-    display: none !important;
+.shop-item-info h4 {
+    margin: 0 0 5px 0;
+    font-size: 20px;
+    color: #fff;
 }
+
+.shop-item-info p {
+    font-size: 14px;
+    margin: 0 0 15px 0;
+    color: var(--text-secondary);
+}
+
+.level-bar-container {
+    background: #000;
+    border-radius: 5px;
+    height: 10px;
+    overflow: hidden;
+    border: 1px solid var(--panel-border);
+}
+
+.level-bar {
+    height: 100%;
+    width: 0%; /* Será controlado pelo JS */
+    background: linear-gradient(90deg, #42a5f5, #1976d2);
+    transition: width 0.3s;
+}
+
+.shop-item-action {
+    text-align: center;
+    width: 200px;
+    flex-shrink: 0;
+}
+
+.upgrade-button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    background: var(--accent-green);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 3px solid #388e3c;
+}
+
+.upgrade-button:hover:not(:disabled) {
+    background: #66bb6a;
+    transform: translateY(-2px);
+}
+
+.upgrade-button:disabled {
+    background: #555;
+    color: #999;
+    cursor: not-allowed;
+    border-bottom: 3px solid #333;
+}
+
+.max-level-text {
+    font-weight: bold;
+    color: var(--accent-gold);
+}
+
+
+/* Outros estilos (game over, etc) */
+.hidden { display: none !important; }
+
+@keyframes fadeInScaleUp { 
+    from { opacity: 0; transform: scale(.9); } 
+    to { opacity: 1; transform: scale(1); } 
+}
+
+#gameOverScreen {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); display: flex; justify-content: center;
+    align-items: center; text-align: center; z-index: 100;
+}
+.game-over-box {
+    width: 400px; background: linear-gradient(145deg, #1e2a78, #3c4a9c);
+    padding: 30px; border-radius: 20px; border: 1px solid #7986cb;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); animation: fadeInScaleUp 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.game-over-box h1 { margin-top: 0; color: #fff; }
+.score-label { font-size: 16px; color: #c5cae9; margin-bottom: 0; }
+#finalScore { font-size: 48px; font-weight: 700; color: var(--accent-gold); margin: 0 0 10px 0; }
+#coins-earned { color: var(--accent-gold); font-size: 20px; font-weight: bold; margin-top: -15px; margin-bottom: 20px; }
+.stats-container { display: flex; justify-content: space-around; margin-bottom: 30px; border-top: 1px solid #5c6bc0; border-bottom: 1px solid #5c6bc0; padding: 15px 0; }
+.stats-label { font-size: 14px; color: #c5cae9; margin: 0; }
+.stats-value { font-size: 22px; font-weight: 700; color: #fff; margin: 5px 0 0 0; }
+#restartButton { padding: 15px 30px; font-size: 20px; cursor: pointer; background-color: var(--accent-green); color: #fff; border: none; border-radius: 10px; transition: all .3s; border-bottom: 4px solid #388e3c; }
+#restartButton:hover { background-color: #66bb6a; transform: translateY(-2px); }
