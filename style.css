@@ -1,0 +1,230 @@
+/* Configurações Globais */
+:root {
+    --panel-bg: #1a1a2e;
+    --panel-border: #3a3a5e;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0c0;
+    --accent-gold: #ffeb3b;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    background-color: #000010;
+    color: var(--text-primary);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* Layout Principal */
+.main-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Alinha os painéis no topo */
+    gap: 20px;
+    width: 100%;
+    max-width: 1800px;
+}
+
+.game-column {
+    flex-shrink: 0; /* Impede que a coluna do jogo encolha */
+}
+
+.game-container {
+    position: relative;
+    border: 2px solid #fff;
+    box-shadow: 0 0 20px #fff;
+    width: 1200px; /* Largura fixa para o canvas */
+    height: 700px; /* Altura fixa para o canvas */
+}
+
+canvas#gameCanvas {
+    display: block;
+    background-color: #0c113b;
+    width: 100%;
+    height: 100%;
+}
+
+/* Painéis de Informação (Esquerda/Direita) */
+.info-panel {
+    background-color: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 15px;
+    padding: 20px;
+    width: 250px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.info-panel h2 {
+    text-align: center;
+    margin-top: 0;
+    color: #fff;
+    border-bottom: 2px solid var(--panel-border);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.panel-section {
+    margin-bottom: 25px;
+}
+
+.panel-section h3 {
+    color: #fff;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.panel-section p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Estilos Específicos dos Painéis */
+#hangar-display {
+    background-color: #0c113b;
+    border-radius: 10px;
+    padding: 10px;
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+#ship-preview-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+#coin-display p {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--accent-gold);
+}
+
+/* HUD do Jogo (Score, etc.) */
+#ui-container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 24px;
+    pointer-events: none;
+    text-shadow: 1px 1px 3px #000; /* Sombra no texto para melhor leitura */
+}
+
+#gameOverScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 100;
+}
+
+/* Animação de fade-in e escala */
+@keyframes fadeInScaleUp {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.game-over-box {
+    width: 400px;
+    background: linear-gradient(145deg, #1e2a78, #3c4a9c); /* Gradiente sutil */
+    padding: 30px;
+    border-radius: 20px;
+    border: 1px solid #7986cb;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Sombra mais forte */
+    animation: fadeInScaleUp 0.5s cubic-bezier(0.165, 0.84, 0.44, 1); /* Aplica a animação */
+}
+
+.game-over-box h1 {
+    margin-top: 0;
+    color: #fff;
+}
+
+.score-label {
+    font-size: 16px;
+    color: #c5cae9;
+    margin-bottom: 0;
+}
+
+#finalScore {
+    font-size: 48px;
+    font-weight: bold;
+    color: var(--accent-gold);
+    margin: 0 0 10px 0; /* Reduzida a margem inferior */
+}
+
+/* Novo estilo para moedas ganhas */
+#coins-earned {
+    color: var(--accent-gold);
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: -15px;
+    margin-bottom: 20px;
+}
+
+/* Container para as novas estatísticas */
+.stats-container {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 30px;
+    border-top: 1px solid #5c6bc0;
+    border-bottom: 1px solid #5c6bc0;
+    padding: 15px 0;
+}
+
+.stats-label {
+    font-size: 14px;
+    color: #c5cae9;
+    margin: 0;
+}
+
+.stats-value {
+    font-size: 22px;
+    font-weight: bold;
+    color: #fff;
+    margin: 5px 0 0 0;
+}
+
+#restartButton {
+    padding: 15px 30px;
+    font-size: 20px;
+    cursor: pointer;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    transition: all 0.3s;
+    border-bottom: 4px solid #388e3c; /* Efeito 3D */
+}
+
+#restartButton:hover {
+    background-color: #66bb6a;
+    transform: translateY(-2px); /* Efeito de levantar */
+}
+
+.hidden {
+    display: none !important;
+}

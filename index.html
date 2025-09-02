@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lançamento Sideral</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <main class="main-wrapper">
+
+        <aside class="info-panel left-panel">
+            <h2>MEU HANGAR</h2>
+            <div id="hangar-display">
+                <canvas id="ship-preview-canvas"></canvas>
+            </div>
+            <div class="panel-section">
+                <h3>Foguete Atual</h3>
+                <p>Modelo "Orion-1"</p>
+            </div>
+            <div id="coin-display" class="panel-section">
+                <h3>MOEDAS</h3>
+                <p id="total-coins">0</p>
+            </div>
+        </aside>
+
+        <div class="game-column">
+            <div class="game-container">
+                <canvas id="gameCanvas"></canvas>
+                <div id="ui-container">
+                    <div id="score">Distância: 0 m</div>
+                    <div id="instructions">Segure o clique para lançar!</div>
+                </div>
+                <div id="gameOverScreen" class="hidden">
+                    <div class="game-over-box">
+                        <h1>Fim de Jogo</h1>
+                        <p class="score-label">Distância Final</p>
+                        <p id="finalScore">0 m</p>
+                        <p id="coins-earned" class="score-label"></p>
+                        <div class="stats-container">
+                            <div><p class="stats-label">Altura Máxima</p><p id="statsAltitude" class="stats-value">0 m</p></div>
+                            <div><p class="stats-label">Pico de Velocidade</p><p id="statsSpeed" class="stats-value">0</p></div>
+                            <div><p class="stats-label">Tempo de Voo</p><p id="statsTime" class="stats-value">0 s</p></div>
+                        </div>
+                        <button id="restartButton">Recomeçar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <aside class="info-panel right-panel">
+            <h2>INSTRUÇÕES</h2>
+            <div class="panel-section">
+                <h3>OBJETIVO</h3>
+                <p>Lance seu foguete o mais longe possível para ganhar moedas e quebrar recordes.</p>
+            </div>
+            <div class="panel-section">
+                <h3>COMO JOGAR</h3>
+                <p>1. <strong>Segure o clique</strong> do mouse ou o toque na tela para ativar o medidor de força.</p>
+                <p>2. <strong>Solte no momento certo</strong> para lançar. Quanto mais força, mais longe você vai!</p>
+            </div>
+            <div class="panel-section">
+                <h3>PONTUAÇÃO</h3>
+                <p>Você ganha <strong>1 moeda</strong> a cada <strong>10 metros</strong> percorridos.</p>
+            </div>
+        </aside>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
